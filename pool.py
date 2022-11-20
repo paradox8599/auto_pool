@@ -125,7 +125,7 @@ class Pool:
         rho = 1  # distance resolution in pixels of the Hough grid
         theta = np.pi / 180  # angular resolution in radians of the Hough grid
         threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-        min_line_length = 500  # minimum number of pixels making up a line
+        min_line_length = 400  # minimum number of pixels making up a line
         max_line_gap = 10  # maximum gap in pixels between connectable line segments
 
         # Run Hough on edge detected image
@@ -133,6 +133,21 @@ class Pool:
         lines = cv2.HoughLinesP(
             edges, rho, theta, threshold, np.array([]), min_line_length, max_line_gap
         )
+
+        # line_image = img_bgr.copy()
+        # for line in lines:
+        #     for x1, y1, x2, y2 in line:
+        #         cv2.line(
+        #             line_image,
+        #             (x1 + self.x, y1 + self.y),
+        #             (x2 + self.x, y2 + self.y),
+        #             (255, 0, 255),
+        #             1,
+        #         )
+
+        # cv2.imshow("Table", cv2.cvtColor(line_image, cv2.COLOR_BGR2RGB))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         # vertical
         vertical = [
@@ -154,11 +169,15 @@ class Pool:
         top = horizontal[1][0][1] + self.y
         bottom = horizontal[-2][0][1] + self.y
 
-        # line_image = img_bgr.copy()
+        line_image = img_bgr.copy()
         # cv2.rectangle(line_image, (left, top), (right, bottom), (255, 0, 0), 1)
-        # cv2.imshow("line_image", cv2.cvtColor(line_image, cv2.COLOR_BGR2RGB))
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow(
+            "Table bounds",
+            cv2.cvtColor(line_image[top:bottom, left:right], cv2.COLOR_BGR2RGB),
+        )
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
         self.x = left
         self.y = top
         self.w = right - left
@@ -274,7 +293,16 @@ class Pool:
                     1,
                 )
             title = "Select a ball" if title is None else title
-            cv2.imshow(title, cv2.cvtColor(temp_img, cv2.COLOR_BGR2RGB))
+            cv2.imshow(
+                title,
+                cv2.cvtColor(
+                    temp_img[
+                        self.top - 30 : self.bottom + 30,
+                        self.left - 30 : self.right + 30,
+                    ],
+                    cv2.COLOR_BGR2RGB,
+                ),
+            )
             key = cv2.waitKey(0)
             cv2.destroyAllWindows()
 
@@ -411,7 +439,15 @@ class Pool:
                 ball.color,
                 2,
             )
-        cv2.imshow("Balls", cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
+        cv2.imshow(
+            "Balls",
+            cv2.cvtColor(
+                img_bgr[
+                    self.top - 30 : self.bottom + 30, self.left - 30 : self.right + 30
+                ],
+                cv2.COLOR_BGR2RGB,
+            ),
+        )
         key = cv2.waitKey(0)
         cv2.destroyAllWindows()
         return key
