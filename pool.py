@@ -525,7 +525,7 @@ class Pool:
         self.find_table_area(img, table_mask)
 
         while True:
-            while kb.read_key() != "page down":
+            while kb.read_key() != "ctrl":
                 pass
 
             img = self.screenshot()

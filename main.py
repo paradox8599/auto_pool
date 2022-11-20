@@ -1,8 +1,7 @@
-from time import sleep
-
 from pool import Pool
-
+import keyboard as kb
 
 if __name__ == "__main__":
-    sleep(1)
+    while kb.read_key() != "shift":
+        pass
     Pool().run()
