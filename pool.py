@@ -564,11 +564,6 @@ class Pool:
             sleep(0.2)
 
 
-if __name__ == "__main__":
-    sleep(1)
-    Pool().run()
-
-
 # strengths
 forces = {
     1: 14,
