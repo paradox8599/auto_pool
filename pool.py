@@ -112,21 +112,42 @@ class Pool:
 
         # Table location and size
         self.x, self.y, self.w, self.h = cv2.boundingRect(cnt)
+
+        expand = 10
+        self.x = self.x - expand
+        self.y = self.y - expand
+        self.w = self.w + expand * 2
+        self.h = self.h + expand * 2
+
+        # line_img = img_bgr.copy()
+        # cv2.rectangle(
+        #     line_img,
+        #     (self.x, self.y),
+        #     (self.x + self.w, self.y + self.h),
+        #     (0, 255, 0),
+        #     2,
+        # )
+        # cv2.imshow("Table", line_img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
         self.find_table_bounds(img_bgr)
 
     # https://stackoverflow.com/questions/45322630/how-to-detect-lines-in-opencv
     def find_table_bounds(self, img_bgr: cv2.Mat):
         img_cropped = img_bgr[self.y : self.y + self.h, self.x : self.x + self.w]
-        img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
-        blur_gray = cv2.GaussianBlur(img_gray, (5, 5), 0)
+        img = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
+        img = cv2.GaussianBlur(img, (5, 5), 0)
         low_threshold = 30
         high_threshold = 40
-        edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+        edges = cv2.Canny(img, low_threshold, high_threshold)
+
         rho = 1  # distance resolution in pixels of the Hough grid
         theta = np.pi / 180  # angular resolution in radians of the Hough grid
         threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-        min_line_length = 400  # minimum number of pixels making up a line
-        max_line_gap = 10  # maximum gap in pixels between connectable line segments
+        # minimum number of pixels making up a line
+        min_line_length = self.w // 3
+        max_line_gap = 50  # maximum gap in pixels between connectable line segments
 
         # Run Hough on edge detected image
         # Output "lines" is an array containing endpoints of detected line segments
@@ -149,30 +170,31 @@ class Pool:
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        # vertical
+        # vertical lines
         vertical = [
-            [[x1, y1, x2, y2]]
-            for [[x1, y1, x2, y2]] in lines
-            if abs(y2 - y1) > abs(x2 - x1)
+            [[x1, y1, x2, y2]] for [[x1, y1, x2, y2]] in lines if 5 > abs(x2 - x1)
         ]
-        vertical.sort(key=lambda x: x[0][0])
-        left = vertical[1][0][0] + self.x
-        right = vertical[-2][0][0] + self.x
+        lines_vertical_left = [line for line in vertical if line[0][0] < self.w // 2]
+        lines_vertical_right = [line for line in vertical if line[0][0] > self.w // 2]
+
+        left = self.x + max([line[0][0] for line in lines_vertical_left])
+        right = self.x + min([line[0][0] for line in lines_vertical_right])
 
         # horizontal
         horizontal = [
-            [[x1, y1, x2, y2]]
-            for [[x1, y1, x2, y2]] in lines
-            if abs(y2 - y1) < abs(x2 - x1)
+            [[x1, y1, x2, y2]] for [[x1, y1, x2, y2]] in lines if 5 > abs(y2 - y1)
         ]
-        horizontal.sort(key=lambda x: x[0][1])
-        top = horizontal[1][0][1] + self.y
-        bottom = horizontal[-2][0][1] + self.y
+        lines_horizontal_top = [line for line in horizontal if line[0][1] < self.h // 2]
+        lines_horizontal_bottom = [
+            line for line in horizontal if line[0][1] > self.h // 2
+        ]
+        top = self.y + max([line[0][1] for line in lines_horizontal_top])
+        bottom = self.y + min([line[0][1] for line in lines_horizontal_bottom])
 
         line_image = img_bgr.copy()
-        # cv2.rectangle(line_image, (left, top), (right, bottom), (255, 0, 0), 1)
+        cv2.rectangle(line_image, (left, top), (right, bottom), (255, 0, 0), 1)
         cv2.imshow(
-            "Table bounds",
+            "Confirm Table bounds",
             cv2.cvtColor(line_image[top:bottom, left:right], cv2.COLOR_BGR2RGB),
         )
         cv2.waitKey(0)
@@ -580,3 +602,8 @@ forces = {
     11: 67,
     12: 73,
 }
+
+if __name__ == "__main__":
+    while kb.read_key() != "shift":
+        pass
+    Pool().run()
