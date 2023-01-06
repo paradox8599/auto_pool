@@ -2,7 +2,7 @@
 
 An assist tool for game [Poolians](https://store.steampowered.com/app/670290/Real_Pool_3D__Poolians/).
 
-*Not verified on other devices yet*
+*Not tested on other devices yet*
 
 ## Install
 
